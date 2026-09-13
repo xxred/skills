@@ -1,5 +1,11 @@
 {
-  "$schema": "https://mcp.dev/schema/mcp.json",
-  "description": "MCP 服务预留配置。后续按「架构基线 → 技能 → 工具」顺序开发配套工具时，在此注册 MCP 服务，工具行为须严格对齐 skills/ 下对应技能的执行步骤。",
-  "servers": []
+  "mcpServers": {
+    "stable-homeostasis": {
+      "type": "stdio",
+      "command": "python3",
+      "args": [
+        "${PLUGIN_ROOT}/mcp/stable_homeostasis_server.py"
+      ]
+    }
+  }
 }
