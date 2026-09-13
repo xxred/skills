@@ -1,0 +1,26 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "stable-arch-forge",
+  "version": "1.0.0",
+  "description": "稳态发育多Agent架构落地插件，包含顶层元架构、AI辅助软件开发完整设计体系；L1~L4渐进式技能集，用于架构落地、偏差识别与系统癌变治理。按照技能顺序完整执行即可完整落地整套架构。",
+  "author": "open-forge-self",
+  "repository": "https://github.com/xxred/skills",
+  "license": "MIT",
+  "skills": [
+    {"path": "./skills/l1-arch-cognition/SKILL.md"},
+    {"path": "./skills/l1-risk-cancer-recognize/SKILL.md"},
+    {"path": "./skills/l2-global-spec/SKILL.md"},
+    {"path": "./skills/l2-boundary-gate/SKILL.md"},
+    {"path": "./skills/l3-target-field-design/SKILL.md"},
+    {"path": "./skills/l3-self-org-network/SKILL.md"},
+    {"path": "./skills/l3-stable-inspect-design/SKILL.md"},
+    {"path": "./skills/l3-boundary-layer-design/SKILL.md"},
+    {"path": "./skills/l4-dev-workflow/SKILL.md"},
+    {"path": "./skills/l4-deviation-cancer-dispose/SKILL.md"},
+    {"path": "./skills/l4-cross-layer-collab/SKILL.md"},
+    {"path": "./skills/l4-arch-consistency-guard/SKILL.md"}
+  ],
+  "agents": [
+    {"path": "./agents/stable-architect.agent.md"}
+  ]
+}
