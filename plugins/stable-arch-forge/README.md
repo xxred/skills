@@ -1,19 +1,37 @@
 # stable-arch-forge Agent Plugin
 
-Agent Plugin 1.0 | 稳态发育多Agent架构落地插件
+Agent Plugins 1.0 | 稳态发育多Agent架构落地插件
 
-> 插件目标：提供一套完整的**稳态发育架构**，用于 AI 辅助软件设计、AI 编程；采用 L1~L4 渐进式技能披露。
-> 核心规则：**必须按 L1→L2→L3→L4 顺序执行；每个技能门禁校验全部通过，方可执行依赖该技能的后续技能。完整跑完全部技能等价于完整落地整套架构。**
+> 插件目标：提供一套完整的**稳态发育架构**，用于 AI 辅助软件设计、AI 编程；采用 L1~L4 渐进式技能披露，并附带**稳态治理 MCP 工具**将架构能力直接落地为可调用工具。
+> 核心规则：**必须按 L1→L2→L3→L4 顺序执行技能；每个技能门禁校验全部通过，方可执行依赖该技能的后续技能。完整跑完全部技能 = 完整落地整套架构；MCP 工具行为严格对齐架构基线，可被 Agent 直接调用执行巡检、门禁、偏差分级与审计。**
 
 ## 目录说明
 
-- `plugin.json`：插件清单，VS Code Agent 加载入口
+- `plugin.json`：插件清单（Agent Plugins 1.0 规范，skills 与 mcp 自动发现）
+- `mcp.json`：MCP 服务器注册（portable MCP 格式，`${PLUGIN_ROOT}` 引用插件内路径）
+- `mcp/stable_homeostasis_server.py`：稳态治理 MCP 服务器（Python 零依赖，stdio 启动）
 - `docs/`：架构原始基线文档（唯一真相源，Source of Truth）
-- `skills/`：渐进式可执行技能集合，一技能一目录
-- `agents/`：自定义 Agent 角色定义
+- `skills/`：渐进式可执行技能集合，一技能一目录（自动发现）
+- `com.github.copilot/agents/`：VS Code Copilot 自定义 Agent 角色（stable-architect 稳态架构师）
 - `templates/`：SKILL.md 模板
 - `CHANGELOG.md`：插件版本变更记录
-- `mcp.json`：预留，后续配套工具 MCP 接入
+
+## 配套 MCP 服务器（stable-homeostasis）
+
+插件启用后自动启动 `stable-homeostasis` MCP 服务器，提供 8 个工具，**对齐架构四层能力**：
+
+| 工具 | 对应架构层 | 对应接口/技能 | 功能 |
+|------|-----------|---------------|------|
+| `goal_field_init` | 目标场层 | 目标编码器 | 初始化全局目标场（四维快照+版本） |
+| `goal_gradient` | 目标场层 | `getGoalGradient` | 计算 Agent 当前状态偏差值与优化方向 |
+| `peer_validate` | 自组织协同层 | `peerValidate` | 邻域横向校验（目标锚定 + ≥2 邻域） |
+| `inspect_scan` | 稳态巡检层 | L3-03 技能 | 稳态巡检五类检查 |
+| `deviation_classify` | 稳态巡检层 | 详细设计 §4.1 | 偏差分级 L0~L4 + 处置建议 |
+| `check_permission` | 边界约束层 | `checkActionPermission` | 角色权限门禁（白名单默认拒绝） |
+| `boundary_rules` | 边界约束层 | L2-02 技能 | 查询技术栈白名单/权限矩阵/禁止项 |
+| `arch_consistency_audit` | 稳态层 | L4-04 技能 | 架构一致性审计（漂移检测→重构判定） |
+
+> 所有判定规则（偏差公式、分级阈值、白名单、权限矩阵、禁止项）**直接取自 `docs/` 架构基线**，修改架构须同步更新 `mcp/stable_homeostasis_server.py` 中的规则数据与 `arch-version-log.md`。
 
 ## 技能总清单
 
@@ -47,10 +65,10 @@ L1-01 → L1-02 → L2-01 → L2-02 → L3-01 → L3-02 → L3-03 → L3-04 → 
 
 ## 迭代治理规则
 
-1. **修改架构基线**：修改 `docs/` 目录文档，更新 `arch-version-log.md`，遍历本插件 `skills/` 目录所有技能，同步更新受影响 SKILL.md。
+1. **修改架构基线**：修改 `docs/` 目录文档，更新 `arch-version-log.md`，遍历本插件 `skills/` 目录所有技能，同步更新受影响 SKILL.md 与 `mcp/stable_homeostasis_server.py` 中的规则数据。
 2. **修改技能**：仅修改 `skills/` 目录。若技能执行发现架构存在矛盾或缺失，**禁止直接修改技能绕过约束，必须先更新 `docs/` 基线文档**。
-3. **配套工具开发顺序**：更新架构基线 → 更新对应技能 → 配置 `mcp.json` → 开发工具，工具行为严格对齐技能步骤。
+3. **配套工具开发顺序**：更新架构基线 → 更新对应技能 → 更新 MCP 工具规则 → 工具行为严格对齐技能步骤。
 
 ## 版本
 
-v1.0.0
+v1.1.0
