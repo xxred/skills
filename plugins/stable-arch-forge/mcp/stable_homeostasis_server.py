@@ -100,7 +100,11 @@ def classify_deviation(deviation):
 
 
 def compute_gradient(current):
-    """计算综合偏差（详细设计 §4.1 公式）。"""
+    """计算综合偏差（详细设计 §4.1 公式）。
+
+    current: {requirement: 0~1, architecture: 0~1, quality: 0~100, progress: 0~1}
+    偏差 = (1-需求)*0.4 + (1-架构)*0.3 + (100-质量)/100*0.2 + (1-进度)*0.1
+    """
     req = 1.0 - _clamp01(current.get("requirement", 1.0))
     arch = 1.0 - _clamp01(current.get("architecture", 1.0))
     try:
@@ -127,6 +131,7 @@ def compute_goal_gradient(agent_id, current):
         4,
     )
     level = classify_deviation(deviation)
+    # 优化优先级：按维度偏差降序
     priority = [k for k, _ in sorted(dim.items(), key=lambda kv: -kv[1])]
     return {
         "agent_id": agent_id,
@@ -144,12 +149,14 @@ def peer_validate(output, neighbor_ids):
     issues = []
     if not isinstance(output, dict):
         output = {}
+    # 必需字段：目标追溯 + 基本完整性
     if not output.get("goal_id"):
         issues.append({"level": "error", "field": "goal_id", "desc": "产出物未锚定目标场目标（违反目标锚定原则）"})
     if not output.get("type"):
         issues.append({"level": "error", "field": "type", "desc": "产出物缺少类型声明（design/code/test/doc）"})
     if not output.get("content"):
         issues.append({"level": "warning", "field": "content", "desc": "产出物内容为空"})
+    # 邻域数量约束：至少 2 个邻域节点
     neighbors = neighbor_ids or []
     if len(neighbors) < 2:
         issues.append({"level": "error", "field": "neighbors", "desc": f"邻域校验节点至少 2 个，当前 {len(neighbors)} 个"})
@@ -188,6 +195,7 @@ def check_permission(agent_id, action, target):
         return {"allowed": False, "reason": f"角色 {agent_id} 被禁止执行 {action}"}
     if action in perm.get("tools", []):
         return {"allowed": True, "reason": f"动作 {action} 在角色 {agent_id} 工具白名单内"}
+    # 不在工具白名单、也不在禁止项 → 按默认拒绝原则处理
     return {"allowed": False, "reason": f"动作 {action} 不在角色 {agent_id} 白名单内，默认拒绝"}
 
 
@@ -251,6 +259,123 @@ def arch_consistency_audit(baseline_version, current_model):
         "threshold": threshold,
         "over_threshold": over,
         "dispose": "启动架构重构计划，修复漂移" if over else "记录漂移，持续观测",
+    }
+
+
+# ---------------------------------------------------------------------------
+# 阶段导航路由（对齐 l0-arch-entry 入口技能的 L1~L4 状态机）
+# ---------------------------------------------------------------------------
+
+STAGES = [
+    {
+        "stage": "L1",
+        "name": "认知层",
+        "entry": "l0-arch-entry",
+        "skills": ["l1-arch-cognition", "l1-risk-cancer-recognize"],
+        "gate": "理解架构原理与癌变风险，能回答为什么这样设计",
+        "tools": ["arch_route"],
+    },
+    {
+        "stage": "L2",
+        "name": "规约层",
+        "entry": "l0-arch-entry",
+        "skills": ["l2-global-spec", "l2-boundary-gate"],
+        "gate": "全局刚性规约成文；边界门禁与白名单落地",
+        "tools": ["boundary_rules", "check_permission"],
+    },
+    {
+        "stage": "L3",
+        "name": "分层设计层",
+        "entry": "l0-arch-entry",
+        "skills": [
+            "l3-target-field-design",
+            "l3-self-org-network",
+            "l3-stable-inspect-design",
+            "l3-boundary-layer-design",
+        ],
+        "gate": "四层架构分层设计完成且互不矛盾",
+        "tools": ["goal_field_init", "arch_consistency_audit"],
+    },
+    {
+        "stage": "L4",
+        "name": "稳态运行治理层",
+        "entry": "l0-arch-entry",
+        "skills": [
+            "l4-dev-workflow",
+            "l4-deviation-cancer-dispose",
+            "l4-cross-layer-collab",
+            "l4-arch-consistency-guard",
+        ],
+        "gate": "开发全流程走通；偏差分级处置；架构漂移受控",
+        "tools": ["goal_gradient", "peer_validate", "inspect_scan", "deviation_classify"],
+    },
+]
+
+# 技能 → 下一技能（依赖链，最后一个为空表示闭环）
+SKILL_CHAIN = {
+    "l0-arch-entry": "l1-arch-cognition",
+    "l1-arch-cognition": "l1-risk-cancer-recognize",
+    "l1-risk-cancer-recognize": "l2-global-spec",
+    "l2-global-spec": "l2-boundary-gate",
+    "l2-boundary-gate": "l3-target-field-design",
+    "l3-target-field-design": "l3-self-org-network",
+    "l3-self-org-network": "l3-stable-inspect-design",
+    "l3-stable-inspect-design": "l3-boundary-layer-design",
+    "l3-boundary-layer-design": "l4-dev-workflow",
+    "l4-dev-workflow": "l4-deviation-cancer-dispose",
+    "l4-deviation-cancer-dispose": "l4-cross-layer-collab",
+    "l4-cross-layer-collab": "l4-arch-consistency-guard",
+    "l4-arch-consistency-guard": "",
+}
+
+TASK_TO_STAGE = {
+    "understand": "L1", "cognition": "L1", "认识": "L1", "认知": "L1",
+    "spec": "L2", "constraint": "L2", "gate": "L2", "规约": "L2", "边界": "L2", "白名单": "L2",
+    "design": "L3", "architecture": "L3", "分层": "L3", "设计": "L3",
+    "dev": "L4", "develop": "L4", "code": "L4", "coding": "L4", "开发": "L4", "编码": "L4", "巡检": "L4", "运维": "L4",
+}
+
+
+def arch_route(task_type, current_stage, completed_skills):
+    """阶段导航：返回当前阶段、下一技能、门禁要求与可用 MCP 工具。"""
+    done = set(completed_skills or [])
+    # 1) 根据已完成技能链定位第一个未完成技能（l0-arch-entry 是导航起点，视为已完成）
+    next_skill = ""
+    for skill, nxt in SKILL_CHAIN.items():
+        if skill == "l0-arch-entry" or skill in done:
+            continue
+        next_skill = skill
+        break
+    if not next_skill:
+        # 全部完成 → 闭环
+        return {
+            "status": "closed",
+            "message": "全部技能已完成，架构闭环进入稳态运行态：按需重复 L4 巡检（inspect_scan）与偏差处置（deviation_classify）",
+            "next_skill": "",
+            "stage": "L4",
+            "gate": "稳态循环：持续巡检，偏差 L3 以上暂停上报",
+            "tools": ["inspect_scan", "deviation_classify", "goal_gradient", "arch_consistency_audit"],
+        }
+    # 2) 找到该技能所属阶段
+    stage_key = current_stage or TASK_TO_STAGE.get((task_type or "").lower(), "")
+    current = None
+    for s in STAGES:
+        if next_skill in s["skills"]:
+            current = s
+            break
+    if current is None:
+        current = STAGES[0]
+    stage_done = [sk for sk in current["skills"] if sk in done]
+    stage_left = [sk for sk in current["skills"] if sk not in done]
+    return {
+        "status": "in_progress",
+        "stage": current["stage"],
+        "stage_name": current["name"],
+        "next_skill": next_skill,
+        "stage_progress": {"done": stage_done, "remaining": stage_left},
+        "gate": current["gate"],
+        "mcp_tools": current["tools"],
+        "rule": "执行 next_skill 技能，产出技能正文全部交付物并校验门禁；门禁未全部通过禁止进入下一技能",
     }
 
 
@@ -394,6 +519,18 @@ TOOLS = [
             "required": ["current_model"],
         },
     },
+    {
+        "name": "arch_route",
+        "description": "阶段导航：根据已完成技能与任务类型，返回当前阶段、下一步要执行的技能、门禁要求与可用 MCP 工具（对齐 L0 入口技能状态机）",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "task_type": {"type": "string", "description": "任务类型关键词：understand/spec/design/dev 或中文（认知/规约/设计/开发）"},
+                "current_stage": {"type": "string", "description": "当前阶段 L1~L4（可选，自动推断）"},
+                "completed_skills": {"type": "array", "items": {"type": "string"}, "description": "已完成技能名列表（如 ["l1-arch-cognition"]）"},
+            },
+        },
+    },
 ]
 
 
@@ -460,6 +597,8 @@ def handle_request(req):
                 result = boundary_rules(args.get("category", "all"))
             elif name == "arch_consistency_audit":
                 result = arch_consistency_audit(args.get("baseline_version", ""), args.get("current_model", {}))
+            elif name == "arch_route":
+                result = arch_route(args.get("task_type", ""), args.get("current_stage", ""), args.get("completed_skills", []))
             else:
                 return _respond(rid, None, {"code": -32601, "message": f"未知工具: {name}"})
             return _respond(rid, _tool_result(json.dumps(result, ensure_ascii=False, indent=2)))
@@ -469,6 +608,7 @@ def handle_request(req):
 
 
 def main():
+    # 幂等防双启动保护（可选）：若环境变量已注入插件根，可用于定位 docs/
     plugin_root = os.environ.get("PLUGIN_ROOT", "")
     if plugin_root:
         sys.stderr.write(f"[stable-homeostasis] plugin root: {plugin_root}\n")

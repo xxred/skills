@@ -1,8 +1,8 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "stable-arch-forge",
-  "version": "1.1.0",
-  "description": "稳态发育多Agent架构落地插件：包含顶层元架构、AI辅助软件开发完整设计体系；L1~L4渐进式技能集与配套稳态治理 MCP 工具，用于架构落地、偏差识别与系统癌变治理。",
+  "version": "1.2.0",
+  "description": "稳态发育多Agent架构落地插件：包含顶层元架构、AI辅助软件开发完整设计体系；L0 入口 + L1~L4渐进式技能集、稳态治理 MCP 工具与硬约束 hooks，用于架构落地、偏差识别与系统癌变治理。",
   "author": {
     "name": "open-forge-self"
   },
