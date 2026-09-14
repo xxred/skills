@@ -1,0 +1,10 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "type": "command",
+        "command": "python3 \"${PLUGIN_ROOT}/com.github.copilot/hooks/arch-gate.py\""
+      }
+    ]
+  }
+}
