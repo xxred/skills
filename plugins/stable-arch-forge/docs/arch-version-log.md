@@ -4,9 +4,9 @@
 
 | 版本 | 日期 | 变更简述 | 变更文件 | 受影响技能 |
 |------|------|----------|----------|------------|
+| v1.1.0 | 2026-09-22 | 新增软件发育系统基线：Software Genome（软件基因组）、Consistency Engine（一致性引擎）、Quality Gate（质量门禁）、Growth Budget（生长预算）、Change/ADR（受控变异）、Development Context（受约束编码） | 04_software_development_system.md | 新增 l3-genome-model-design、l4-consistency-engine、l4-quality-gate、l4-dev-context；更新 l0-arch-entry |
 | v1.0.0 | 2026-09-13 | 初始版本：完整稳态四层元架构、AI多Agent落地架构、全阶段详细设计 | 01_meta_architecture.md、02_agent_dev_architecture.md、03_full_detail_design.md | 全部 12 个技能 |
 
 ## 变更规则
-
 1. 架构文档更新 → 升级版本号（语义化：主.次.修订）→ 填写上表 → 逐一更新受影响 SKILL.md 的 `archVersion` 与正文引用。
 2. 技能执行中发现架构缺失/矛盾 → 禁止直接修改技能绕过约束，先修订本目录基线文档，再更新技能。
