@@ -1,22 +1,27 @@
 # stable-arch-forge 常驻规则（RULES）
 
-本插件已安装。你处于**稳态发育多Agent架构**环境中。以下规则持续生效，违反即系统"癌变"。
+本插件已安装。你处于**稳态发育多Agent架构 + 软件发育系统**环境中。以下规则持续生效，违反即系统"癌变"。
 
 ## 这是什么
-本插件封装完整架构体系：`docs/`（架构基线，唯一真相源）+ `skills/`（L0 入口 + L1~L4 共 13 个技能）+ `stable-homeostasis` MCP（9 个治理工具）+ 硬约束 hooks。
+本插件封装完整架构体系：`docs/`（架构基线，唯一真相源，含软件发育系统：Software Genome 软件基因组 / Consistency Engine 一致性引擎 / Quality Gate 质量门禁 / Growth Budget 生长预算 / Development Context 受约束编码）+ `skills/`（L0 入口 + L1~L4 共 17 个技能）+ `stable-homeostasis` MCP（14 个治理与发育工具）+ 硬约束 hooks。
 
 ## 必须做什么
 1. 任何 AI 软件开发/设计任务，**先读取 `l0-arch-entry` 技能**，确定当前阶段与下一步。
-2. 按依赖链顺序执行技能：L1-01→L1-02→L2-01→L2-02→L3-01→L3-02→L3-03→L3-04→L4-01→L4-02→L4-03→L4-04，**禁止跳级**。
+2. 按依赖链顺序执行技能：L1-01→L1-02→L2-01→L2-02→L3-01→L3-02→L3-03→L3-04→L3-05(软件基因组建模)→L4-01→L4-02→L4-03→L4-04→L4-05(一致性引擎)→L4-06(质量门禁)→L4-07(受约束编码)，**禁止跳级**。
 3. 每个技能完成后校验尾部「完成态与下一步」门禁；**门禁未全部通过不得前进**。
-4. 需要硬校验时调用 MCP 工具（`arch_route`/`goal_gradient`/`check_permission`/`inspect_scan`/`deviation_classify` 等），**以工具结果为准**。
+4. 需要硬校验时调用 MCP 工具（`arch_route`/`genome_relation_audit`/`consistency_check`/`quality_gate`/`growth_budget`/`dev_context_build`/`deviation_classify` 等），**以工具结果为准**。
+5. 编码任务必须先构建 Development Context（开发上下文包）再动代码；完成后按发育报告模板汇报。
 
 ## 禁止做什么（硬限制）
 1. 禁止跳过门禁、逆流程、跨阶段执行。
 2. 禁止私自修改 `skills/` 目录内容（hooks 会拦截）；发现架构矛盾必须先改 `docs/` 基线 + 更新 `arch-version-log.md`。
-3. 禁止越权动作：写操作前先 `check_permission`；白名单默认拒绝。
-4. 禁止引入白名单外技术栈/依赖；禁止跨层调用、修改他模块内部数据。
-5. 偏差必须分级处置（L1 修复/L2 回滚/L3 暂停/L4 终止），L3 以上不得继续作业。
+3. **单一真相源**：Software Genome（软件基因组）是唯一事实源；文档/代码/测试都是投影，禁止并行建立"第二真相源"。
+4. **变化必须受控**：改变核心需求/领域规则/公共 API 语义/架构层级/外部依赖，必须进入 Change / ADR（受控变异）流程，禁止静默修改局部。
+5. **未验证不等于完成**：代码写完只是 IMPLEMENTED，必须通过测试/约束/一致性检查才可宣称 VERIFIED/ALIGNED。
+6. **无来源增长必须被发现**：无法追溯到需求/设计/约束/技术决策的新增能力标记 UNDOCUMENTED_GROWTH（未文档化增长）并进入审查。
+7. 禁止越权动作：写操作前先 `check_permission`；白名单默认拒绝。
+8. 禁止引入白名单外技术栈/依赖；禁止跨层调用、修改他模块内部数据。
+9. 偏差必须分级处置（L1 修复/L2 回滚/L3 暂停/L4 终止），L3 以上不得继续作业。
 
 ## 下一步不确定时
 调用 MCP 工具 `arch_route`（参数：`completed_skills`=已完成技能列表），立即获得当前阶段、下一技能与门禁要求。

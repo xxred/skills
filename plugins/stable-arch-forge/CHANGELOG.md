@@ -1,5 +1,13 @@
 # CHANGELOG - stable-arch-forge
 
+## v1.3.0 (2026-09-22)
+
+- **新增架构基线** `docs/04_software_development_system.md`：完整收录软件发育系统方案（Software Growth Studio 定位）——Software Genome（软件基因组/Canonical Model）唯一真相源、Relation 发育谱系、Consistency Engine（一致性引擎四类检查）、Quality Gate（质量门禁 G1~G7）、Growth Budget（生长预算）、Change/ADR（受控变异）、Development Context（受约束编码）、Evidence（证据链）；`arch-version-log.md` 升至架构基线 v1.1.0
+- **新增 4 个技能**：`l3-genome-model-design`（软件基因组建模）、`l4-consistency-engine`（一致性引擎）、`l4-quality-gate`（质量门禁）、`l4-dev-context`（受约束编码）；技能总数 13 → 17
+- **MCP 新增 5 个工具**（共 14 个）：`genome_relation_audit`（发育谱系审计）、`consistency_check`（四类一致性检查）、`quality_gate`（G1~G7 门禁）、`growth_budget`（生长预算校验）、`dev_context_build`（开发上下文构建）；`arch_route` 阶段路由同步扩展至 17 技能
+- **L0 入口技能更新**：技能清单、阶段表、MCP 工具表同步；硬限制新增四条（单一真相源 / 变化受控 Change/ADR / 未验证不等于完成 / 无来源增长必须被发现）
+- 更新 README、CHANGELOG、仓库 update-log
+
 ## v1.2.0 (2026-09-14)
 
 - **新增 L0 总入口技能** `l0-arch-entry`：安装即认知、四阶段状态机导航、阶段判断、硬限制清单、跑偏处置指引

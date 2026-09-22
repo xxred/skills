@@ -1,8 +1,8 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "stable-arch-forge",
-  "version": "1.2.0",
-  "description": "稳态发育多Agent架构落地插件：包含顶层元架构、AI辅助软件开发完整设计体系；L0 入口 + L1~L4渐进式技能集、稳态治理 MCP 工具与硬约束 hooks，用于架构落地、偏差识别与系统癌变治理。",
+  "version": "1.3.0",
+  "description": "稳态发育多Agent架构 + 软件发育系统（Software Growth Studio）落地插件：包含顶层元架构、软件基因组（唯一真相源）、一致性引擎、质量门禁、生长预算与受约束编码完整体系；L1~L4渐进式技能集与配套稳态治理 MCP 工具，用于架构落地、偏差识别、异常增生检测与系统癌变治理。",
   "author": {
     "name": "open-forge-self"
   },
@@ -13,6 +13,8 @@
     "architecture",
     "homeostasis",
     "stable-arch",
+    "software-genome",
+    "growth-studio",
     "agent-plugin"
   ]
 }
