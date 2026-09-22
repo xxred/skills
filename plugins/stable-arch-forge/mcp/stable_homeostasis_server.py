@@ -3,7 +3,8 @@
 stable-homeostasis MCP Server
 =============================
 为 `stable-arch-forge` Agent Plugin 提供配套 MCP 工具，将「发育稳态」四层架构
-（目标场层 / 自组织协同层 / 稳态巡检层 / 边界约束层）的能力落地为可调用工具。
+（目标场层 / 自组织协同层 / 稳态巡检层 / 边界约束层）与「软件发育系统」
+（软件基因组 / 一致性引擎 / 质量门禁 / 生长预算 / 受约束编码）落地为可调用工具。
 
 实现约束：
 - 零第三方依赖，基于 MCP 协议（JSON-RPC 2.0 over stdio）实现。
@@ -12,6 +13,7 @@ stable-homeostasis MCP Server
   * 技术栈白名单 / 角色权限矩阵：docs/03_full_detail_design.md §1.1
   * 巡检五类检查项：docs/03_full_detail_design.md §4.2
   * 门禁默认拒绝原则：docs/02_agent_dev_architecture.md
+  * 发育谱系 / 四类一致性检查 / 质量门禁 G1~G7 / 生长预算 / 开发上下文：docs/04_software_development_system.md
 
 用法：
   python3 stable_homeostasis_server.py
@@ -292,9 +294,10 @@ STAGES = [
             "l3-self-org-network",
             "l3-stable-inspect-design",
             "l3-boundary-layer-design",
+            "l3-genome-model-design",
         ],
-        "gate": "四层架构分层设计完成且互不矛盾",
-        "tools": ["goal_field_init", "arch_consistency_audit"],
+        "gate": "四层架构分层设计完成且互不矛盾；软件基因组（唯一真相源）建模完成",
+        "tools": ["goal_field_init", "arch_consistency_audit", "genome_relation_audit"],
     },
     {
         "stage": "L4",
@@ -305,9 +308,12 @@ STAGES = [
             "l4-deviation-cancer-dispose",
             "l4-cross-layer-collab",
             "l4-arch-consistency-guard",
+            "l4-consistency-engine",
+            "l4-quality-gate",
+            "l4-dev-context",
         ],
-        "gate": "开发全流程走通；偏差分级处置；架构漂移受控",
-        "tools": ["goal_gradient", "peer_validate", "inspect_scan", "deviation_classify"],
+        "gate": "开发全流程走通；偏差分级处置；架构漂移受控；一致性引擎、质量门禁 G1~G7、受约束编码全部生效",
+        "tools": ["goal_gradient", "peer_validate", "inspect_scan", "deviation_classify", "consistency_check", "quality_gate", "growth_budget", "dev_context_build"],
     },
 ]
 
@@ -321,18 +327,23 @@ SKILL_CHAIN = {
     "l3-target-field-design": "l3-self-org-network",
     "l3-self-org-network": "l3-stable-inspect-design",
     "l3-stable-inspect-design": "l3-boundary-layer-design",
-    "l3-boundary-layer-design": "l4-dev-workflow",
+    "l3-boundary-layer-design": "l3-genome-model-design",
+    "l3-genome-model-design": "l4-dev-workflow",
     "l4-dev-workflow": "l4-deviation-cancer-dispose",
     "l4-deviation-cancer-dispose": "l4-cross-layer-collab",
     "l4-cross-layer-collab": "l4-arch-consistency-guard",
-    "l4-arch-consistency-guard": "",
+    "l4-arch-consistency-guard": "l4-consistency-engine",
+    "l4-consistency-engine": "l4-quality-gate",
+    "l4-quality-gate": "l4-dev-context",
+    "l4-dev-context": "",
 }
 
 TASK_TO_STAGE = {
     "understand": "L1", "cognition": "L1", "认识": "L1", "认知": "L1",
     "spec": "L2", "constraint": "L2", "gate": "L2", "规约": "L2", "边界": "L2", "白名单": "L2",
-    "design": "L3", "architecture": "L3", "分层": "L3", "设计": "L3",
+    "design": "L3", "architecture": "L3", "分层": "L3", "设计": "L3", "genome": "L3", "model": "L3", "建模": "L3", "模型": "L3", "基因组": "L3",
     "dev": "L4", "develop": "L4", "code": "L4", "coding": "L4", "开发": "L4", "编码": "L4", "巡检": "L4", "运维": "L4",
+    "consistency": "L4", "quality": "L4", "一致性": "L4", "质量门禁": "L4", "门禁": "L4", "context": "L4", "上下文": "L4",
 }
 
 
@@ -350,11 +361,12 @@ def arch_route(task_type, current_stage, completed_skills):
         # 全部完成 → 闭环
         return {
             "status": "closed",
-            "message": "全部技能已完成，架构闭环进入稳态运行态：按需重复 L4 巡检（inspect_scan）与偏差处置（deviation_classify）",
+            "message": "全部技能已完成，架构闭环进入稳态运行态：按需重复 L4 巡检（inspect_scan）、一致性检查（consistency_check）与质量门禁（quality_gate）",
             "next_skill": "",
             "stage": "L4",
-            "gate": "稳态循环：持续巡检，偏差 L3 以上暂停上报",
-            "tools": ["inspect_scan", "deviation_classify", "goal_gradient", "arch_consistency_audit"],
+            "gate": "稳态循环：持续巡检与一致性监控，偏差 L3 以上暂停上报，未验证不等于完成",
+            "tools": ["inspect_scan", "deviation_classify", "goal_gradient", "arch_consistency_audit",
+                      "consistency_check", "quality_gate", "growth_budget", "dev_context_build"],
         }
     # 2) 找到该技能所属阶段
     stage_key = current_stage or TASK_TO_STAGE.get((task_type or "").lower(), "")
@@ -376,6 +388,209 @@ def arch_route(task_type, current_stage, completed_skills):
         "gate": current["gate"],
         "mcp_tools": current["tools"],
         "rule": "执行 next_skill 技能，产出技能正文全部交付物并校验门禁；门禁未全部通过禁止进入下一技能",
+    }
+
+
+# ---------------------------------------------------------------------------
+# 软件发育系统工具（对齐 docs/04_software_development_system.md，v1.1.0 基线）
+# ---------------------------------------------------------------------------
+
+# 质量门禁 G1~G7 定义
+QUALITY_GATES = [
+    ("G1", "需求门禁（Requirement Gate）", "需求完整（含验收标准与状态机定义）"),
+    ("G2", "设计门禁（Design Gate）", "Domain/Architecture/UI 足够明确"),
+    ("G3", "契约门禁（Contract Gate）", "API/Event/State 已确定且无冲突"),
+    ("G4", "实现门禁（Implementation Gate）", "Code 与开发上下文匹配，无越界实现"),
+    ("G5", "验证门禁（Verification Gate）", "Tests 通过（证据链 REQ→CODE→COMMIT→TEST→PASS）"),
+    ("G6", "一致性门禁（Consistency Gate）", "无关键漂移、冲突、未文档化增长"),
+    ("G7", "发布门禁（Release Gate）", "当前版本形成可追踪 Baseline"),
+]
+# 生长预算默认限额（项目可配置）
+DEFAULT_BUDGET_LIMITS = {
+    "public_types": 20, "public_methods": 10, "direct_deps": 10,
+    "cyclic_deps": 0, "arch_violations": 0, "dup_ratio": 0.2, "complexity": 10,
+}
+
+
+def genome_relation_audit(objects, relations):
+    """发育谱系审计：检查每个核心对象的关系完整性，标记孤儿/未验证/未文档化增长。"""
+    objs = objects or []
+    rels = relations or []
+
+    def _has(source, relation_types):
+        return any(r.get("source") == source and r.get("relationType") in relation_types for r in rels)
+
+    items, stats = [], {"total": len(objs), "aligned": 0, "orphaned": 0, "undocumented": 0, "unverified": 0}
+    for o in objs:
+        oid = o.get("id", "")
+        otype = o.get("type", "")
+        missing = []
+        if otype in ("Requirement", "需求", "Feature", "功能"):
+            # 需求/功能必须有实现与验证去向
+            if not _has(oid, ("implemented-by", "realizes", "represented-by")):
+                missing.append("无实现去向（implemented-by/realizes/represented-by 缺失）")
+            if not _has(oid, ("verified-by",)):
+                missing.append("无验证去向（verified-by 缺失 → UNVERIFIED）")
+                stats["unverified"] += 1
+            status = "UNVERIFIED" if missing else "ALIGNED"
+        elif otype in ("CodeSymbol", "代码符号", "Code", "代码"):
+            # 代码必须有来源（被 implemented-by 引用，即模型登记过的符号）
+            has_source = any(r.get("target") == oid and r.get("relationType") == "implemented-by" for r in rels)
+            if not has_source:
+                missing.append("无模型来源 → UNDOCUMENTED_GROWTH（未文档化增长）")
+                stats["undocumented"] += 1
+            status = "UNDOCUMENTED" if missing else "ALIGNED"
+        else:
+            # 其他对象：至少有一条入边（derived-from/contains/refines/realizes 等来源关系）
+            in_edges = [r for r in rels if r.get("target") == oid and r.get("relationType") in
+                        ("derived-from", "contains", "refines", "realizes", "represented-by", "shaped-by")]
+            if not in_edges:
+                missing.append("无任何来源关系（ORPHANED 孤儿）")
+                stats["orphaned"] += 1
+            status = "ORPHANED" if missing else "ALIGNED"
+        if not missing:
+            stats["aligned"] += 1
+        items.append({"object_id": oid, "type": otype, "status": status, "missing": missing})
+
+    dispose = []
+    if stats["orphaned"] > 0:
+        dispose.append("孤儿对象：补充来源关系或归档移除")
+    if stats["undocumented"] > 0:
+        dispose.append("未文档化增长：进入审查状态，补充需求/设计/技术决策登记后方可视为正常功能")
+    if stats["unverified"] > 0:
+        dispose.append("未验证对象：补齐测试与证据链后进入 VERIFIED")
+    return {"audit_items": items, "stats": stats, "dispose": dispose,
+            "rule": "Canonical Model（规范模型）是唯一真相源；任何对象必须能回答：来自哪里/影响谁/实现在哪里/验证在哪里"}
+
+
+def consistency_check(check_type, data):
+    """一致性引擎四类检查（A 文档↔文档 / B 文档→代码 / C 代码→文档 / D 代码→约束），输出 CONSISTENCY_REPORT。"""
+    check_type = (check_type or "all").upper()
+    report = {"check_type": check_type, "details": [],
+              "summary": {"Aligned": 0, "Stale": 0, "Conflict": 0, "Drifted": 0,
+                          "Undocumented": 0, "Orphaned": 0, "Unverified": 0, "ArchitectureErrors": 0}}
+
+    def _bump(key):
+        report["summary"][key] = report["summary"].get(key, 0) + 1
+
+    if check_type in ("A", "ALL"):
+        # 文档↔文档：同一状态/枚举在各文档中的命名与取值集合一致性
+        states = (data or {}).get("states") or {}  # {状态名: {文档: [取值...]}}
+        for state, docs in states.items():
+            sets = {}
+            for doc, values in docs.items():
+                sets[doc] = sorted(set(values or []))
+            if len(sets) < 2:
+                continue
+            base = next(iter(sets.values()))
+            for doc, vals in sets.items():
+                if set(vals) != set(base):
+                    drift = sorted(set(vals) - set(base)) + sorted(set(base) - set(vals))
+                    report["details"].append({"object": state, "docs": [doc, next(iter(sets))],
+                                              "kind": "DRIFTED", "desc": f"{doc} 取值集合不一致，差异: {drift}"})
+                    _bump("Drifted")
+    if check_type in ("B", "ALL"):
+        # 文档→代码：需求是否实现，缺 Test → UNVERIFIED
+        reqs = (data or {}).get("requirements") or []
+        for r in reqs:
+            if not r.get("has_code"):
+                report["details"].append({"object": r.get("id", ""), "kind": "UNVERIFIED", "desc": "设计未实现（缺 Code）"})
+                _bump("Unverified")
+            elif not r.get("has_test"):
+                report["details"].append({"object": r.get("id", ""), "kind": "UNVERIFIED", "desc": "实现缺 Test → UNVERIFIED"})
+                _bump("Unverified")
+    if check_type in ("C", "ALL"):
+        # 代码→文档：未登记代码符号 → UNDOCUMENTED_GROWTH
+        symbols = (data or {}).get("code_symbols") or []
+        known = set((data or {}).get("known_symbols") or [])
+        for sym in symbols:
+            if sym not in known:
+                report["details"].append({"object": sym, "kind": "UNDOCUMENTED_GROWTH",
+                                          "desc": "代码符号无模型来源（未文档化增长）"})
+                _bump("Undocumented")
+    if check_type in ("D", "ALL"):
+        # 代码→约束：架构违规/不变量破坏/生长预算超限
+        violations = (data or {}).get("violations") or []
+        for v in violations:
+            report["details"].append({"object": v.get("target", ""), "kind": "ArchitectureErrors", "desc": v.get("desc", "")})
+            _bump("ArchitectureErrors")
+    summary = report["summary"]
+    summary["Aligned"] = max(0, summary["Aligned"])
+    return {"consistency_report": report,
+            "dispose": ["冲突/漂移按偏差分级处置（deviation_classify）", "未文档化增长进入审查", "架构错误阻断发育直至修复"]}
+
+
+def quality_gate(evidence):
+    """质量门禁 G1~G7 逐级判定：evidence 形如 {G1: true/false} 或 {G1: {passed, note}}。"""
+    ev = evidence or {}
+    gates = []
+    blocked_at = None
+    for code, name, desc in QUALITY_GATES:
+        item = ev.get(code)
+        if isinstance(item, dict):
+            passed, note = bool(item.get("passed")), item.get("note", "")
+        else:
+            passed, note = bool(item), ""
+        gates.append({"gate": code, "name": name, "desc": desc, "passed": passed, "note": note})
+        if not passed and blocked_at is None:
+            blocked_at = code
+    all_passed = blocked_at is None
+    return {
+        "gates": gates,
+        "all_passed": all_passed,
+        "blocked_at": blocked_at,
+        "dispose": "进入下一发育阶段" if all_passed else f"阻断于 {blocked_at}：整改后重新执行对应门禁，禁止越级放行",
+        "baseline": "本版本已标记为 Baseline（基线）" if all_passed else "未形成 Baseline",
+        "rule": "只有通过 Gate 才允许进入下一阶段；判定以 Evidence（证据）为准，非人工勾选",
+    }
+
+
+def growth_budget(metrics, limits):
+    """生长预算校验：控制异常增生（公开类型数/公开方法数/依赖数/循环依赖/架构违规/重复代码/复杂度）。"""
+    limits = dict(DEFAULT_BUDGET_LIMITS, **(limits or {}))
+    metrics = metrics or {}
+    checks = []
+    for metric, limit in limits.items():
+        value = metrics.get(metric)
+        if value is None:
+            continue
+        passed = value <= limit
+        checks.append({"metric": metric, "value": value, "limit": limit, "passed": passed})
+    violations = [c for c in checks if not c["passed"]]
+    return {
+        "checks": checks,
+        "violations": violations,
+        "overall_passed": len(violations) == 0,
+        "dispose": "预算内，允许继续生长" if not violations else f"生长预算超限 {len(violations)} 项：{', '.join(v['metric'] for v in violations)}，必须收敛后再发育",
+        "note": "Growth Budget（生长预算）是项目可配置边界，不是绝对真理",
+    }
+
+
+def dev_context_build(task_id, items):
+    """构建 Development Context（开发上下文）包：约束 AI 按上下文执行，而非自由编码。"""
+    items = items or {}
+    required = ["requirements", "features", "contracts", "expectedCode", "tests"]
+    missing = [k for k in required if not items.get(k)]
+    ctx = {
+        "taskId": task_id or "TASK-001",
+        "requirements": items.get("requirements", []),
+        "features": items.get("features", []),
+        "architectureRules": items.get("architectureRules", []),
+        "invariants": items.get("invariants", []),
+        "contracts": items.get("contracts", []),
+        "pages": items.get("pages", []),
+        "expectedCode": items.get("expectedCode", []),
+        "tests": items.get("tests", []),
+    }
+    return {
+        "development_context": ctx,
+        "complete": len(missing) == 0,
+        "missing": missing,
+        "workflow": ["读取开发上下文", "读取相关代码", "分析影响范围", "形成实现计划", "修改代码",
+                     "运行测试", "运行架构检查", "运行契约检查", "运行一致性检查", "生成工作汇报"],
+        "ai_prohibited": ["改变核心需求", "改变领域规则", "改变公共 API 语义", "增加未经记录的外部依赖",
+                          "引入架构层级", "增加无对应需求的业务能力（须进入 Change/ADR）"],
+        "dispose": "缺项时先回 Software Genome（软件基因组）补齐登记，禁止带缺项进入实现阶段",
     }
 
 
@@ -525,10 +740,94 @@ TOOLS = [
         "inputSchema": {
             "type": "object",
             "properties": {
-                "task_type": {"type": "string", "description": "任务类型关键词：understand/spec/design/dev 或中文（认知/规约/设计/开发）"},
+                "task_type": {"type": "string", "description": "任务类型关键词：understand/spec/design/dev/consistency 或中文（认知/规约/设计/开发/建模/一致性/门禁）"},
                 "current_stage": {"type": "string", "description": "当前阶段 L1~L4（可选，自动推断）"},
-                "completed_skills": {"type": "array", "items": {"type": "string"}, "description": "已完成技能名列表（如 ["l1-arch-cognition"]）"},
+                "completed_skills": {"type": "array", "items": {"type": "string"}, "description": "已完成技能名列表（如 [\"l1-arch-cognition\"]）"},
             },
+        },
+    },
+    {
+        "name": "genome_relation_audit",
+        "description": "发育谱系审计：检查软件基因组对象关系完整性，标记孤儿/未验证/未文档化增长（L3 软件基因组建模落地）",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "objects": {
+                    "type": "array",
+                    "items": {"type": "object", "properties": {
+                        "id": {"type": "string"}, "type": {"type": "string", "description": "Requirement/Feature/CodeSymbol 等"},
+                    }},
+                    "description": "基因组对象列表 [{id, type}]",
+                },
+                "relations": {
+                    "type": "array",
+                    "items": {"type": "object", "properties": {
+                        "source": {"type": "string"}, "sourceType": {"type": "string"},
+                        "relationType": {"type": "string"}, "target": {"type": "string"}, "targetType": {"type": "string"},
+                    }},
+                    "description": "统一关系列表 [{source, relationType, target}]",
+                },
+            },
+            "required": ["objects", "relations"],
+        },
+    },
+    {
+        "name": "consistency_check",
+        "description": "一致性引擎四类检查：A 文档↔文档 / B 文档→代码 / C 代码→文档（未文档化增长）/ D 代码→约束，输出 CONSISTENCY_REPORT（L4 一致性引擎落地）",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "check_type": {"type": "string", "description": "A/B/C/D 或 ALL，默认 ALL"},
+                "data": {
+                    "type": "object",
+                    "description": "按检查类型传入：A 用 states；B 用 requirements；C 用 code_symbols+known_symbols；D 用 violations",
+                },
+            },
+            "required": ["data"],
+        },
+    },
+    {
+        "name": "quality_gate",
+        "description": "质量门禁 G1~G7 逐级判定：输入各门禁证据，输出通过/阻断位置与基线结论（L4 质量门禁落地）",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "evidence": {
+                    "type": "object",
+                    "description": "门禁证据 {G1: true/false 或 {passed, note}}，逐级 G1~G7",
+                },
+            },
+            "required": ["evidence"],
+        },
+    },
+    {
+        "name": "growth_budget",
+        "description": "生长预算校验：公开类型数/公开方法数/依赖数/循环依赖/架构违规/重复代码/复杂度超限检测（Growth Budget 落地）",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "metrics": {
+                    "type": "object",
+                    "description": "当前度量 {public_types, public_methods, direct_deps, cyclic_deps, arch_violations, dup_ratio, complexity}",
+                },
+                "limits": {"type": "object", "description": "自定义限额（可选），默认 public_types<=20, public_methods<=10, direct_deps<=10, cyclic_deps=0, arch_violations=0, dup_ratio<=0.2, complexity<=10"},
+            },
+            "required": ["metrics"],
+        },
+    },
+    {
+        "name": "dev_context_build",
+        "description": "构建 Development Context（开发上下文）包：taskId + 九要素，检查完整性并声明 AI 禁止变更项（L4 受约束编码落地）",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "task_id": {"type": "string", "description": "开发任务标识"},
+                "items": {
+                    "type": "object",
+                    "description": "上下文要素 {requirements[], features[], architectureRules[], invariants[], contracts[], pages[], expectedCode[], tests[]}",
+                },
+            },
+            "required": ["task_id", "items"],
         },
     },
 ]
@@ -561,7 +860,7 @@ def handle_request(req):
         return _respond(rid, {
             "protocolVersion": params.get("protocolVersion", "2024-11-05"),
             "capabilities": {"tools": {}},
-            "serverInfo": {"name": "stable-homeostasis", "version": "1.0.0"},
+            "serverInfo": {"name": "stable-homeostasis", "version": "1.3.0"},
         })
     if method == "notifications/initialized":
         return None
@@ -599,6 +898,16 @@ def handle_request(req):
                 result = arch_consistency_audit(args.get("baseline_version", ""), args.get("current_model", {}))
             elif name == "arch_route":
                 result = arch_route(args.get("task_type", ""), args.get("current_stage", ""), args.get("completed_skills", []))
+            elif name == "genome_relation_audit":
+                result = genome_relation_audit(args.get("objects", []), args.get("relations", []))
+            elif name == "consistency_check":
+                result = consistency_check(args.get("check_type", "ALL"), args.get("data", {}))
+            elif name == "quality_gate":
+                result = quality_gate(args.get("evidence", {}))
+            elif name == "growth_budget":
+                result = growth_budget(args.get("metrics", {}), args.get("limits", {}))
+            elif name == "dev_context_build":
+                result = dev_context_build(args.get("task_id", ""), args.get("items", {}))
             else:
                 return _respond(rid, None, {"code": -32601, "message": f"未知工具: {name}"})
             return _respond(rid, _tool_result(json.dumps(result, ensure_ascii=False, indent=2)))
